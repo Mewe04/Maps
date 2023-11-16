@@ -1,20 +1,22 @@
 import { Paper } from '@mui/material'
-import L from 'leaflet'
+import { divIcon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import React from 'react'
-import { MapContainer, Marker, TileLayer } from 'react-leaflet'
+import { Marker as LeafletMarker, MapContainer, TileLayer } from 'react-leaflet'
 
-const icon = L.icon({
-	iconUrl: 'marker.png',
+const icon = divIcon({
+	className: 'custom-icon',
 	iconSize: [38, 38],
+	iconAnchor: [19, 38],
+	html: `<img src="./marker.png" style="width: 100%; height: 100%;" />`,
 })
 
 const initialPosition = [51.505, -0.09]
 
-function MapComponent({ setSelectedMarker, markers, onMapClick, isEditing }) {
+function MapComponent({ setSelectedMarker, markers, MapClickHandler }) {
 	return (
 		<>
-			<Paper elevation={3} style={{ height: '100%' }} onClick={onMapClick}>
+			<Paper elevation={3} style={{ height: '100%' }}>
 				<MapContainer
 					center={initialPosition}
 					zoom={13}
@@ -25,19 +27,19 @@ function MapComponent({ setSelectedMarker, markers, onMapClick, isEditing }) {
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 						url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 					/>
-					{markers.map((marker, index) => (
-						<Marker
-							key={index}
+					{markers.map(marker => (
+						<LeafletMarker
+							key={marker.id}
 							position={marker.position}
 							icon={icon}
 							eventHandlers={{
-								click: e => {
-									e.originalEvent.stopPropagation()
+								click: () => {
 									setSelectedMarker(marker)
 								},
 							}}
 						/>
 					))}
+					<MapClickHandler />
 				</MapContainer>
 			</Paper>
 		</>

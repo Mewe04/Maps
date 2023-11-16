@@ -1,47 +1,41 @@
-// Ваш App.js
-import {
-	Button,
-	CssBaseline,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogTitle,
-	Grid,
-	TextField,
-} from '@mui/material'
-import React, { useState } from 'react'
+// App.js
+import { CssBaseline, Grid } from '@mui/material'
+import React, { useEffect, useState } from 'react'
+import { useMapEvents } from 'react-leaflet'
 import './App.css'
+import AddDialog from './Components/AddDialog'
 import AppBarComponent from './Components/AppBarComponent'
+import EditDialog from './Components/EditDialog'
 import MapComponent from './Components/MapComponent'
 import SidePanel from './Components/SidePanel'
+import {
+	db,
+	onValue,
+	push,
+	ref,
+	remove,
+	set,
+	update,
+} from './Components/firebase' // Updated import statement
 
 function App() {
 	const [selectedMarker, setSelectedMarker] = useState(null)
-	const [markers, setMarkers] = useState([
-		{
-			id: 1,
-			position: [51.505, -0.09],
-			title: 'Метка 1',
-			description: 'Описание метки 1',
-		},
-		{
-			id: 2,
-			position: [51.51, -0.1],
-			title: 'Метка 2',
-			description: 'Описание метки 2',
-		},
-	])
 
-	const [editedTitle, setEditedTitle] = useState('')
-	const [editedDescription, setEditedDescription] = useState('')
+	const [markers, setMarkers] = useState([])
 
-	const handleTitleChange = event => {
-		setEditedTitle(event.target.value)
-	}
-
-	const handleDescriptionChange = event => {
-		setEditedDescription(event.target.value)
-	}
+	useEffect(() => {
+		const markersRef = ref(db, 'markers')
+		onValue(markersRef, snapshot => {
+			const data = snapshot.val()
+			if (data) {
+				const markersList = Object.keys(data).map(key => ({
+					id: key,
+					...data[key],
+				}))
+				setMarkers(markersList)
+			}
+		})
+	}, [])
 
 	const [isEditing, setIsEditing] = useState(false)
 
@@ -52,17 +46,60 @@ function App() {
 		setSelectedMarker(marker)
 
 		if (isEditing) {
-			setEditedTitle(marker?.title || '') // Используйте ?. для безопасного доступа к свойству
-			setEditedDescription(marker?.description || '')
 			setOpenEditDialog(true)
 		}
 	}
 
-	const handleMapClick = () => {
-		setSelectedMarker(null)
-		if (isEditing) {
-			setOpenAddDialog(true) // Открываем окно добавления
+	const [addLatLng, setAddLatLng] = useState(null)
+
+	function MapClickHandler() {
+		const map = useMapEvents({
+			click: event => {
+				const { lat, lng } = event.latlng
+				console.log(`Координаты: ${lat}, ${lng}`)
+				setSelectedMarker(null)
+				if (isEditing) {
+					setAddLatLng(event.latlng)
+					setOpenAddDialog(true)
+				}
+			},
+		})
+		return null
+	}
+
+	const addMarker = async (position, title, description) => {
+		const newMarkerRef = push(ref(db, 'markers'))
+		const newMarker = {
+			id: newMarkerRef.key,
+			position,
+			title,
+			description,
 		}
+
+		await set(newMarkerRef, newMarker)
+		setMarkers([...markers, newMarker])
+	}
+
+	const updateMarker = async (id, title, description) => {
+		const markerRef = ref(db, `markers/${id}`)
+		await update(markerRef, { title, description })
+
+		const updatedMarkers = markers.map(marker =>
+			marker.id === id ? { ...marker, title, description } : marker
+		)
+
+		setMarkers(updatedMarkers)
+		setSelectedMarker(null)
+	}
+
+	const deleteMarker = async id => {
+		const markerRef = ref(db, `markers/${id}`)
+		await remove(markerRef)
+
+		const updatedMarkers = markers.filter(marker => marker.id !== id)
+
+		setMarkers(updatedMarkers)
+		setSelectedMarker(null)
 	}
 
 	return (
@@ -75,51 +112,23 @@ function App() {
 					<MapComponent
 						setSelectedMarker={handleMarkerClick}
 						markers={markers}
-						onMapClick={handleMapClick}
-						isEditing={isEditing}
+						MapClickHandler={MapClickHandler}
 					/>
 				</Grid>
 			</Grid>
-			<Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
-				<DialogTitle>Редактирование метки</DialogTitle>
-				<DialogContent>
-					{selectedMarker && (
-						<>
-							<TextField
-								label='Заголовок'
-								defaultValue={selectedMarker.title || ''}
-								onChange={handleTitleChange}
-							/>
-							<TextField
-								label='Описание'
-								defaultValue={selectedMarker.description || ''}
-								onChange={handleDescriptionChange}
-							/>
-						</>
-					)}
-				</DialogContent>
-
-				<DialogActions>
-					{selectedMarker && (
-						<>
-							<Button>Удалить</Button>
-							<Button>Сохранить</Button>
-						</>
-					)}
-					<Button onClick={() => setOpenEditDialog(false)}>Закрыть</Button>
-				</DialogActions>
-			</Dialog>
-			<Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)}>
-				<DialogTitle>Добавление метки</DialogTitle>
-				<DialogContent>
-					<TextField label='Заголовок' onChange={handleTitleChange} />
-					<TextField label='Описание' onChange={handleDescriptionChange} />
-				</DialogContent>
-				<DialogActions>
-					<Button>Добавить</Button>
-					<Button onClick={() => setOpenAddDialog(false)}>Закрыть</Button>
-				</DialogActions>
-			</Dialog>
+			<EditDialog
+				openEditDialog={openEditDialog}
+				setOpenEditDialog={setOpenEditDialog}
+				selectedMarker={selectedMarker}
+				updateMarker={updateMarker}
+				deleteMarker={deleteMarker}
+			/>
+			<AddDialog
+				openAddDialog={openAddDialog}
+				setOpenAddDialog={setOpenAddDialog}
+				addMarker={addMarker}
+				addLatLng={addLatLng}
+			/>
 		</div>
 	)
 }
