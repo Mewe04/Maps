@@ -9,6 +9,8 @@ import {
 } from '@mui/material'
 import MuiAlert from '@mui/material/Alert'
 import React, { useState } from 'react'
+import ReactQuill from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
 
 export default function AddDialog({
 	openAddDialog,
@@ -23,8 +25,8 @@ export default function AddDialog({
 		setTitle(event.target.value)
 	}
 
-	const handleDescriptionChange = event => {
-		setDescription(event.target.value)
+	const handleDescriptionChange = value => {
+		setDescription(value)
 	}
 
 	const handleAdd = () => {
@@ -53,18 +55,47 @@ export default function AddDialog({
 
 	return (
 		<>
-			<Dialog open={openAddDialog} onClose={ExitDialog}>
+			<Dialog
+				open={openAddDialog}
+				onClose={ExitDialog}
+				PaperProps={{ style: { height: '70vh', width: '70vh' } }}
+			>
 				<DialogTitle>Добавление метки</DialogTitle>
 				<DialogContent>
 					<TextField
 						label='Заголовок'
-						value={title} // Используем новый prop для значения
-						onChange={handleTitleChange} // Используем новую функцию для установки значения
+						value={title}
+						onChange={handleTitleChange}
+						style={{ width: '100%', marginTop: 5, marginBottom: 5 }}
 					/>
-					<TextField
-						label='Описание'
-						value={description} // Используем новый prop для значения
-						onChange={handleDescriptionChange} // Используем новую функцию для установки значения
+					<ReactQuill
+						value={description}
+						onChange={handleDescriptionChange}
+						style={{ height: '75%' }}
+						modules={{
+							toolbar: [
+								[{ header: '1' }, { header: '2' }, { font: [] }],
+								[{ size: [] }],
+								['bold', 'italic', 'underline', 'strike'],
+								[{ list: 'ordered' }, { list: 'bullet' }],
+								['clean'],
+							],
+							clipboard: {
+								matchVisual: false,
+							},
+						}}
+						formats={[
+							'header',
+							'font',
+							'size',
+							'bold',
+							'italic',
+							'underline',
+							'strike',
+							'list',
+							'bullet',
+						]}
+						theme='snow'
 					/>
 				</DialogContent>
 				<DialogActions>

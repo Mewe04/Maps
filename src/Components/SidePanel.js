@@ -16,13 +16,11 @@ function SidePanel({ selectedMarker }) {
 	}, [selectedMarker])
 
 	const handlePurchaseClick = () => {
-		// Используем id метки в качестве ключа в объекте purchasedInfo
 		setPurchasedInfo(prevState => ({
 			...prevState,
 			[selectedMarker.id]: true,
 		}))
 
-		// Показываем Snackbar при успешной покупке
 		setOpenSnackbar(true)
 	}
 
@@ -52,9 +50,14 @@ function SidePanel({ selectedMarker }) {
 				{selectedMarker && (
 					<>
 						<Typography variant='h6'>{selectedMarker.title}</Typography>
+						<Typography variant='body1'>Описание:</Typography>
 						{purchasedInfo[selectedMarker.id] ? (
 							<>
-								<Typography>{selectedMarker.description}</Typography>
+								<div
+									dangerouslySetInnerHTML={{
+										__html: selectedMarker.description,
+									}}
+								/>
 							</>
 						) : (
 							<>
@@ -67,7 +70,6 @@ function SidePanel({ selectedMarker }) {
 					</>
 				)}
 			</Paper>
-			{/* Snackbar для сообщения об успешной покупке */}
 			<Snackbar
 				open={openSnackbar}
 				autoHideDuration={6000}

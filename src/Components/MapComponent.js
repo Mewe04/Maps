@@ -2,7 +2,12 @@ import { Paper } from '@mui/material'
 import { divIcon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import React from 'react'
-import { Marker as LeafletMarker, MapContainer, TileLayer } from 'react-leaflet'
+import {
+	AttributionControl,
+	Marker as LeafletMarker,
+	MapContainer,
+	TileLayer,
+} from 'react-leaflet'
 
 const icon = divIcon({
 	className: 'custom-icon',
@@ -16,12 +21,13 @@ const initialPosition = [51.505, -0.09]
 function MapComponent({ setSelectedMarker, markers, MapClickHandler }) {
 	return (
 		<>
-			<Paper elevation={3} style={{ height: '100%' }}>
+			<Paper elevation={3} style={{ height: '100%', display: 'flex' }}>
 				<MapContainer
 					center={initialPosition}
 					zoom={13}
 					scrollWheelZoom={true}
-					style={{ width: '100%', height: '100%' }}
+					style={{ flex: 1, height: '100%' }}
+					attributionControl={false}
 				>
 					<TileLayer
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -40,6 +46,7 @@ function MapComponent({ setSelectedMarker, markers, MapClickHandler }) {
 						/>
 					))}
 					<MapClickHandler />
+					<AttributionControl position='bottomright' prefix={false} />
 				</MapContainer>
 			</Paper>
 		</>

@@ -1,4 +1,3 @@
-// App.js
 import { CssBaseline, Grid } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useMapEvents } from 'react-leaflet'
@@ -8,15 +7,7 @@ import AppBarComponent from './Components/AppBarComponent'
 import EditDialog from './Components/EditDialog'
 import MapComponent from './Components/MapComponent'
 import SidePanel from './Components/SidePanel'
-import {
-	db,
-	onValue,
-	push,
-	ref,
-	remove,
-	set,
-	update,
-} from './Components/firebase' // Updated import statement
+import { db, onValue, push, ref, remove, set, update } from './firebase'
 
 function App() {
 	const [selectedMarker, setSelectedMarker] = useState(null)
